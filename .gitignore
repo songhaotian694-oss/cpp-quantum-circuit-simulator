@@ -67,3 +67,7 @@ vcpkg_installed/
 # test output & cache
 Testing/
 .cache/
+
+# VS Code editor settings (machine-specific paths)
+.vscode/
+
