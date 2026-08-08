@@ -1,7 +1,8 @@
-﻿项目结构说明
+项目结构说明
 （基于C++的轻量级量子线路仿真与可追踪优化平台）
 
 编写日期：2026年8月7日
+更新日期：2026年8月8日（项目已移除 CMake，改用 g++ 直接编译；本文档同步更新）
 适用范围：本说明用于解释项目仓库 cpp-quantum-circuit-simulator 的目录与文件组织方式，以及其中涉及的基础概念，适用于尚未熟悉工程化 C++ 项目结构的团队成员阅读。
 
 一、基本概念
@@ -16,7 +17,7 @@
 实现文件用于编写类与函数的具体实现，即函数内部实际执行的代码。一个类通常拆分为头文件与实现文件两部分：头文件声明接口，实现文件完成功能。
 
 4. 程序入口（main 函数）
-每个 C++ 可执行程序有且仅有一个 main() 函数。程序启动时，操作系统从 main() 的第一条语句开始执行。main() 负责创建对象、调用功能模块并组织整个程序的运行流程。
+每个 C++ 可执行程序有且仅有一个 main() 函数。程序启动时，操作系统从 main() 的第一条语句开始执行。main() 负责创建对象、调用功能模块并组织整个程序的运行流程。本项目的命令行入口位于 app/cli/main.cpp。
 
 5. 编译与链接
 编译是指将每个 .cpp 文件转换为目标文件的过程；链接是指将多个目标文件与所需库合并、生成最终可执行文件的过程。编译与链接统称为构建（build）。
@@ -25,7 +26,7 @@
 构建完成后生成的程序文件（Windows 下为 .exe），用户直接运行该文件即可启动程序。
 
 7. 库（library）
-库是一组预编译代码的集合，供其他程序调用。项目通常将核心模块编译为静态库，供命令行程序、图形界面程序与测试程序共同链接使用。
+库是一组预编译代码的集合，供其他程序调用。项目可将核心模块编译为库，供命令行程序、图形界面程序与测试程序共同使用。当前文件较少，暂不单独建库，直接与其他源文件一起编译。
 
 8. 单元测试
 单元测试是用于验证单个模块（如某个类或函数）行为正确性的程序。测试程序运行后自动检查计算结果是否符合预期，并返回通过或失败。
@@ -41,95 +42,106 @@
 2. LICENSE
 开源许可证文件，用于规定源代码的授权使用方式。项目发布前应确定许可证类型，并记录第三方依赖的许可证信息。
 
-3. CMakeLists.txt
-CMake 构建脚本，是工程的构建配置文件。它声明了项目的源文件组成、可执行程序与库的构建目标、编译选项与依赖关系等。CMake 依据该文件生成对应平台的构建系统，进而完成编译与链接。
+3. .gitignore
+git 忽略规则文件，用于排除构建产物（*.exe、build/ 等）与本地配置，避免误提交。
+
+4. 构建方式
+当前项目不使用 CMake。构建命令直接调用 g++，见 README.md 与 .vscode/tasks.json（VS Code 中按 Ctrl+Shift+B 即可构建）。新增或删除源文件时须同步修改这些构建命令。
 
 三、源代码目录（src）
 
-src 目录存放全部源代码的实现文件（.cpp），按功能划分为以下子目录。
+src 目录存放源代码的实现文件（.cpp），按功能划分为以下子目录。
 
 1. src/core（仿真核心）
-存放量子仿真的核心类实现：
-- QuantumState.cpp：量子态类实现，负责状态向量的存储、初始化、归一化与概率计算。
+当前已实现：
+- QuantumState.cpp：量子态类实现，负责状态向量的存储、初始化、归一化与概率计算（对应头文件 include/quantum/core/QuantumState.h）。
+规划中：
 - QuantumGate.cpp：量子门类实现，负责量子门类型、作用量子比特与参数的表示。
 - QuantumCircuit.cpp：量子线路类实现，负责量子门的添加、删除、修改与读取，以容器形式保存门的序列。
 - Measurement.cpp：测量模块实现，负责线路末端的采样测量与统计结果生成。
 - Simulator.cpp：仿真器类实现，负责按线路顺序执行量子门并更新量子态，是仿真的主执行模块。
 
 2. src/gates（量子门）
-存放按类别划分的量子门实现：
+规划中，存放按类别划分的量子门实现：
 - SingleQubitGate.cpp：单量子比特门（X、Y、Z、H、S、T 等）的实现。
 - TwoQubitGate.cpp：双量子比特门（CNOT、SWAP 等）的实现。
 - RotationGate.cpp：参数化旋转门（RX、RY、RZ）的实现。
 
 3. src/optimizer（优化模块）
-存放线路优化相关实现：
+规划中，存放线路优化相关实现：
 - GateCancel.cpp：门冗余消除规则的实现，用于识别并删除作用对象相同、严格相邻的逆门或自逆门。
 - GateMerge.cpp：同轴旋转门合并规则的实现，用于合并同一量子比特上严格相邻的同类型旋转门。
 - Optimizer.cpp：优化器类实现，负责规则的调度、线路改写与优化日志的生成。
 
 4. src/qasm（OpenQASM 解析）
-存放量子线路标准文本格式的读写实现：
+规划中（提升功能，基础版本可不实现）：
 - QASMParser.cpp：OpenQASM 解析器实现，将 .qasm 文件转换为内部量子线路结构。
 - QASMExporter.cpp：OpenQASM 导出器实现，将内部量子线路结构写为 .qasm 文件。
-说明：该模块属于提升功能，基础版本可不实现。
 
 5. src/algorithms（算法案例）
-存放典型量子算法验证案例的实现：
+规划中，存放典型量子算法验证案例的实现：
 - DeutschJozsa.cpp：Deutsch-Jozsa 算法线路实现。
 - BernsteinVazirani.cpp：Bernstein-Vazirani 算法线路实现。
 - Teleportation.cpp：量子隐形传态线路实现（提升功能）。
-各案例基于统一的核心数据结构构建，不重复实现仿真逻辑。
-
-6. src/main.cpp
-命令行程序的入口文件，包含 main() 函数，用于演示核心功能的基本调用流程。
-说明：为保持核心模块独立可测试，实际项目中建议将命令行入口与图形界面入口分别置于 app/cli 与 app/gui 目录，src 目录仅保留核心库代码。
 
 四、头文件目录（include）
 
-include 目录存放全部公开头文件（.h），与 src 目录按模块一一对应（include/core、include/gates、include/optimizer、include/qasm、include/algorithms）。头文件用于声明类与函数接口，供其他模块引用；实现仍位于 src 目录的对应文件。
+include 目录存放公开头文件（.h），与 src 目录按模块一一对应。当前已实现：
+- include/quantum/core/QuantumState.h：量子态类接口声明。
+后续新增模块时，头文件按相同方式放入对应子目录（include/quantum/gates、include/quantum/optimizer 等）。
 
-五、图形界面目录（Qt_GUI）
+五、命令行程序入口（app/cli）
 
+- app/cli/main.cpp：命令行程序入口，包含 main() 函数，负责创建量子态对象、调用核心模块并输出演示结果。
+说明：命令行入口与图形界面入口相互独立；src 目录仅保留核心库代码，不包含 main()。
+
+六、图形界面目录（app/gui）
+
+规划中（提升阶段启用）：
 - mainwindow.h / mainwindow.cpp：主窗口类的声明与实现，负责界面展示与用户交互。
 - mainwindow.ui：Qt 界面布局文件，以 XML 描述窗口的控件布局。
 - resources/：界面资源目录，存放图标、图片等静态资源。
-说明：界面模块只调用核心模块提供的接口，不包含仿真逻辑实现；界面入口与命令行入口相互独立。
+说明：界面模块只调用核心模块提供的接口，不包含仿真逻辑实现。
 
-六、测试目录（tests）
+七、测试目录（tests）
 
-存放自动化测试程序，每个测试文件为独立的可执行程序：
+存放自动化测试程序，每个测试文件为独立的可执行程序。当前已实现：
+- test_state.cpp：量子态类正确性测试（构建为 test_state.exe）。
+规划中：
 - test_gate.cpp：量子门正确性测试。
 - test_measure.cpp：测量模块测试。
 - test_optimizer.cpp：优化规则正例、反例与等价性测试。
 - test_algorithm.cpp：算法案例测试。
 测试程序自动运行并检查结果，是验证代码正确性的主要手段。
 
-七、示例目录（examples）
+八、示例目录（examples）
 
-存放使用示例程序，演示如何调用核心模块构建并运行典型线路，例如 bell_state.cpp（Bell 态）、dj_example.cpp（Deutsch-Jozsa）、bv_example.cpp（Bernstein-Vazirani）。示例面向使用者，与面向正确性验证的测试程序用途不同。
+规划中，存放使用示例程序，演示如何调用核心模块构建并运行典型线路，例如 bell_state.cpp（Bell 态）、dj_example.cpp（Deutsch-Jozsa）、bv_example.cpp（Bernstein-Vazirani）。示例面向使用者，与面向正确性验证的测试程序用途不同。
 
-八、实验数据目录（benchmark）
+九、实验数据目录（benchmark）
 
+规划中：
 - qasm_cases/：存放实验用 .qasm 线路文件。
 - qiskit_compare/：存放与 Qiskit 对照实验的记录。
 - results/：存放 CSV 实验数据、运行时间与性能统计结果。
 该目录为实验与结项材料的落点，不参与编译。
 
-九、文档目录（docs）
+十、文档目录（docs）
 
+规划中：
 - design.md：软件设计文档。
 - API.md：接口说明文档。
 - experiment.md：实验记录文档。
 - meeting_notes/：组内会议记录。
 文档用于记录设计决策、接口约定与实验过程，是结项材料的重要组成部分。
 
-十、第三方库目录（third_party）
+十一、第三方库目录（third_party）
 
-存放项目引用的第三方库相关文件，或仅保留 README.md 以记录所引用库的名称、版本与许可证信息。第三方依赖建议通过构建系统（如 CMake FetchContent 或 vcpkg）统一管理，不直接复制第三方源码进入仓库。
+存放项目引用的第三方库相关文件，或仅保留 README.md 以记录所引用库的名称、版本与许可证信息。当前核心库不依赖任何第三方库；提升阶段引入 Qt、测试框架等依赖时，再在 third_party/README.md 中记录其名称、版本与许可证。
 
-十一、说明事项
+十二、说明事项
 
-1. 上述结构为规划结构，实际开发过程中可根据需要增删文件与子目录。
-2. 基础验收以 src/core、src/optimizer、include、tests、examples、docs 及 Qt 界面为主；src/qasm 与部分算法案例属于提升功能。
-3. 模块划分、接口约定与目录组织的最终版本，以团队冻结的架构决定文档为准。
+1. 上述结构中的“规划中”部分为后续扩展目标，实际开发过程中可根据需要增删文件与子目录。
+2. 当前基础代码仅包含 src/core/QuantumState.cpp 与 app/cli/main.cpp，先保证核心与命令行跑通，再按规划逐步增加模块。
+3. 基础验收以 src/core、src/optimizer、include、tests、examples、docs 及 Qt 界面为主；src/qasm 与部分算法案例属于提升功能。
+4. 模块划分、接口约定与目录组织的最终版本，以团队冻结的架构决定文档为准。
