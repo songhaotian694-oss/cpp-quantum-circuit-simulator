@@ -1,2 +1,0 @@
-add_executable(quantum_cli main.cpp)
-target_link_libraries(quantum_cli PRIVATE quantum_core)
