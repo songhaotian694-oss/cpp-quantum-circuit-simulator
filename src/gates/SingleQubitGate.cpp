@@ -23,6 +23,23 @@ void apply_x(QuantumState& state, int target) {
     }
 }
 
+void apply_y(QuantumState& state, int target) {
+    if (target < 0 || target >= state.qubit_count()) {
+        throw std::invalid_argument("Y gate target is out of range");
+    }
+
+    const std::size_t target_mask = std::size_t(1) << target;
+    const std::complex<double> i(0.0, 1.0);
+    for (std::size_t index = 0; index < state.size(); ++index) {
+        if ((index & target_mask) == 0) {
+            const std::complex<double> a = state.amplitude(index);
+            const std::complex<double> b = state.amplitude(index | target_mask);
+            state.amplitude(index) = -i * b;
+            state.amplitude(index | target_mask) = i * a;
+        }
+    }
+}
+
 void apply_z(QuantumState& state, int target) {
     if (target < 0 || target >= state.qubit_count()) {
         throw std::invalid_argument("Z gate target is out of range");
