@@ -1,5 +1,6 @@
 #include "quantum/gates/SingleQubitGate.h"
 
+#include <cmath>
 #include <complex>
 #include <cstddef>
 #include <stdexcept>
@@ -32,6 +33,23 @@ void apply_z(QuantumState& state, int target) {
     for (std::size_t index = 0; index < state.size(); ++index) {
         if ((index & target_mask) != 0) {
             state.amplitude(index) *= minus_one;
+        }
+    }
+}
+
+void apply_h(QuantumState& state, int target) {
+    if (target < 0 || target >= state.qubit_count()) {
+        throw std::invalid_argument("H gate target is out of range");
+    }
+
+    const std::size_t target_mask = std::size_t(1) << target;
+    const double inv_sqrt_two = 1.0 / std::sqrt(2.0);
+    for (std::size_t index = 0; index < state.size(); ++index) {
+        if ((index & target_mask) == 0) {
+            const std::complex<double> a = state.amplitude(index);
+            const std::complex<double> b = state.amplitude(index | target_mask);
+            state.amplitude(index) = (a + b) * inv_sqrt_two;
+            state.amplitude(index | target_mask) = (a - b) * inv_sqrt_two;
         }
     }
 }
