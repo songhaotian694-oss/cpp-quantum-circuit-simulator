@@ -1,5 +1,6 @@
 #include "quantum/core/Simulator.h"
 
+#include "quantum/gates/ControlledGate.h"
 #include "quantum/gates/SingleQubitGate.h"
 
 #include <stdexcept>
@@ -27,7 +28,11 @@ void Simulator::apply_gate(QuantumState& state, const Gate& gate) {
             gates::apply_h(state, gate.targets[0]);
             return;
         case GateType::CNOT:
-            throw std::logic_error("CNOT gate execution is not implemented yet");
+            if (gate.controls.size() != 1 || gate.targets.size() != 1) {
+                throw std::invalid_argument("CNOT gate must have exactly one control and one target");
+            }
+            gates::apply_cnot(state, gate.controls[0], gate.targets[0]);
+            return;
     }
     throw std::logic_error("unknown gate type");
 }
