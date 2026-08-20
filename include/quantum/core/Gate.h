@@ -5,9 +5,10 @@
 
 namespace quantum {
 
-// 当前竖切只需要 X、H、CNOT；后续增加量子门时无需修改 Gate 的数据结构。
+// 当前竖切只需要 X、Z、H、CNOT；后续增加量子门时无需修改 Gate 的数据结构。
 enum class GateType {
     X,
+    Z,
     H,
     CNOT,
 };
@@ -26,6 +27,7 @@ struct Gate {
 
 // 统一使用工厂函数构造合法门，调用方不直接拼装 controls/targets。
 Gate make_x(int target);
+Gate make_z(int target);
 Gate make_h(int target);
 Gate make_cnot(int control, int target);
 

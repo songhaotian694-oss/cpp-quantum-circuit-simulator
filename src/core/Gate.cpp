@@ -16,6 +16,9 @@ std::string Gate::to_string() const {
         case GateType::X:
             output << "X(q" << targets.at(0) << ')';
             break;
+        case GateType::Z:
+            output << "Z(q" << targets.at(0) << ')';
+            break;
         case GateType::H:
             output << "H(q" << targets.at(0) << ')';
             break;
@@ -29,6 +32,13 @@ std::string Gate::to_string() const {
 Gate make_x(int target) {
     Gate gate;
     gate.type = GateType::X;
+    gate.targets = {target};
+    return gate;
+}
+
+Gate make_z(int target) {
+    Gate gate;
+    gate.type = GateType::Z;
     gate.targets = {target};
     return gate;
 }

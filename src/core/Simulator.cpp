@@ -14,6 +14,12 @@ void Simulator::apply_gate(QuantumState& state, const Gate& gate) {
             }
             gates::apply_x(state, gate.targets[0]);
             return;
+        case GateType::Z:
+            if (!gate.controls.empty() || gate.targets.size() != 1) {
+                throw std::invalid_argument("Z gate must have exactly one target and no control");
+            }
+            gates::apply_z(state, gate.targets[0]);
+            return;
         case GateType::H:
             throw std::logic_error("H gate execution is not implemented yet");
         case GateType::CNOT:
